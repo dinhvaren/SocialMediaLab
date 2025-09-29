@@ -21,9 +21,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction,
+      secure: false,
       httpOnly: true,
-      sameSite: isProduction ? "none" : "lax",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     },
   })
