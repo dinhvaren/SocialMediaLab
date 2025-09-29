@@ -4,20 +4,19 @@ const route = require("./routes");
 const session = require("express-session");
 const path = require("path");
 const db = require("./database/db");
-
 const app = express();
 
 // body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/image", express.static(path.join(__dirname, "..", "image")));
-app.use(express.static(path.join(__dirname, "..", "..", "views")));
+app.use(express.static(path.join(__dirname, "views")));
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secret-dev",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false },
+    cookie: { secure: process.env.NODE_ENV === "production" },
   })
 );
 

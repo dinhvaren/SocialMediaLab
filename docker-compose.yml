@@ -1,10 +1,9 @@
-# docker-compose.yml
 version: "3.8"
 
 services:
   db:
-    image: mysql:latest
-    container_name: store-lab-mysql
+    image: mysql:8.0
+    container_name: socialmedia-mysql
     environment:
       MYSQL_ROOT_PASSWORD: "050803"
       MYSQL_DATABASE: "SocialMediaLab"
@@ -12,10 +11,31 @@ services:
       - "3310:3306"
     volumes:
       - ./mysql_data:/var/lib/mysql
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./src/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -uroot -p$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    build: .
+    container_name: socialmedia-app
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: "050803"
+      DB_NAME: SocialMediaLab
+      SESSION_SECRET: "secret-dev"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./image:/app/image
+    restart: unless-stopped
