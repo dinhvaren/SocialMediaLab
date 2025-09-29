@@ -10,7 +10,6 @@
   <link rel="icon" type="image/png" href="/image/logo-removebg-preview.png" />
 </head>
 <body class="bg-light">
-  <!-- Navbar đơn giản -->
   <nav class="navbar navbar-expand-lg bg-white shadow-sm">
     <div class="container">
       <a class="navbar-brand fw-bold" href="#">MiniSocial</a>
@@ -24,10 +23,8 @@
           <div class="card-body p-4">
             <h3 class="mb-4 text-center">Chào mừng!</h3>
 
-            <!-- ALERT: hiển thị lỗi / success -->
             <div id="authAlert" class="alert mt-3 d-none" role="alert" style="display:none;"></div>
 
-            <!-- Tabs: Login / Register -->
             <ul class="nav nav-pills nav-fill mb-3" id="authTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">Đăng nhập</button>
@@ -38,9 +35,7 @@
             </ul>
 
             <div class="tab-content">
-              <!-- =============== Form Đăng nhập =============== -->
               <div class="tab-pane fade show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab">
-                <!-- NOTE: đổi action="/auth/login" khi nối backend -->
                 <form id="loginForm" class="needs-validation" novalidate>
                   <div class="mb-3">
                     <label class="form-label">Username</label>
@@ -56,9 +51,7 @@
                 </form>
               </div>
 
-              <!-- =============== Form Đăng ký =============== -->
               <div class="tab-pane fade" id="register-pane" role="tabpanel" aria-labelledby="register-tab">
-                <!-- NOTE: đổi action="/auth/register" khi nối backend -->
                 <form id="registerForm" class="needs-validation" novalidate>
                   <div class="mb-3">
                     <label class="form-label">Username</label>
@@ -88,12 +81,10 @@
   <!-- Bootstrap Bundle + demo JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-  // safe-get element (tránh null errors)
   const authAlertEl = document.getElementById('authAlert');
 
   function showAlert(message, type = 'success') {
     if (!authAlertEl) {
-      // fallback: dùng alert nếu element không tồn tại
       alert(message);
       return;
     }
@@ -109,7 +100,6 @@
     authAlertEl.style.display = 'none';
   }
 
-  // ===== Validation HTML5 (giữ nguyên) =====
   (function () {
     'use strict';
     const forms = document.querySelectorAll('.needs-validation');
@@ -124,7 +114,6 @@
     });
   })();
 
-  // ===== Fetch for Login =====
   const loginForm = document.getElementById('loginForm');
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -148,7 +137,6 @@
         }
       });
 
-      // If server responded with a redirect, follow it in browser
       if (res.redirected) {
         window.location.href = res.url;
         return;
@@ -157,25 +145,19 @@
       const contentType = res.headers.get('content-type') || '';
 
       if (res.ok) {
-        // Prefer server-provided JSON message when available
         if (contentType.includes('application/json')) {
           const j = await res.json();
-          // If server returns ok true -> go dashboard
           if (j && j.ok) {
-            // small UX: show success then redirect
             showAlert(j.message || 'Đăng nhập thành công', 'success');
             setTimeout(() => window.location.href = '/dashboard', 500);
           } else {
-            // if server returned { error: ... }
             showAlert(j.error || 'Đăng nhập thành công', 'success');
             setTimeout(() => window.location.href = '/dashboard', 500);
           }
         } else {
-          // if server returned text/html (no redirect), navigate manually
           setTimeout(() => window.location.href = '/dashboard', 400);
         }
       } else {
-        // handle non-200 responses
         let msg = `Lỗi: ${res.status}`;
         try {
           if (contentType.includes('application/json')) {
@@ -193,7 +175,6 @@
     }
   });
 
-  // ===== Fetch for Register =====
   const registerForm = document.getElementById('registerForm');
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -235,7 +216,6 @@
         } else {
           showAlert('Đăng ký thành công', 'success');
         }
-        // chuyển về trang login sau 0.7s
         setTimeout(() => window.location.href = '/auth/login', 700);
       } else {
         let msg = `Lỗi: ${res.status}`;

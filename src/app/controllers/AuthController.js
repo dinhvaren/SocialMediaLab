@@ -23,7 +23,7 @@ class AuthController {
         // ❌ login fail
         return res
           .status(401)
-          .json({ ok: false, error: "Sai username hoặc mật khẩu" });
+          .json({ ok: false, error: "Sai tài khoản hoặc mật khẩu" });
       }
 
       req.session.userId = rows[0].id;

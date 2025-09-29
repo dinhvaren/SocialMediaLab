@@ -69,7 +69,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
 
-// helpers
 function showAlert(text, type = "success", timeout = 2000) {
   const el = document.getElementById("profileAlert");
   el.className = `alert alert-${type} mt-3`;
@@ -79,7 +78,6 @@ function showAlert(text, type = "success", timeout = 2000) {
 }
 
 function showFieldError(input, msg) {
-  // mark invalid UI; bootstrap shows message if .invalid-feedback exists
   input.classList.add("is-invalid");
   const fb = input.nextElementSibling;
   if (fb && fb.classList && fb.classList.contains("invalid-feedback")) {
@@ -87,22 +85,19 @@ function showFieldError(input, msg) {
   }
 }
 
-// DOM refs
 const profileForm = document.getElementById("profileForm");
 const displayNameInput = profileForm.querySelector("input[name='displayName']");
 const emailInput = profileForm.querySelector("input[name='email']");
 const passwordInput = profileForm.querySelector("input[name='password']");
 const submitBtn = profileForm.querySelector("button[type='submit']");
 const avatarImg = document.querySelector(".profile-avatar");
-const nameHeader = document.querySelector(".card-body h4"); // adjust if different
+const nameHeader = document.querySelector(".card-body h4");
 const emailSmall = document.querySelector(".card-body small.text-muted");
 
-// load profile data and fill form
 async function loadProfile() {
   try {
     const res = await fetch("/profile/me", { credentials: "same-origin" });
     if (!res.ok) {
-      // maybe not logged in
       const txt = await res.text().catch(() => "");
       showAlert("Không thể tải profile: " + (txt || res.status), "danger", 4000);
       return;
@@ -115,18 +110,14 @@ async function loadProfile() {
     const user = j.user || {};
     displayNameInput.value = user.display_name || user.displayName || "";
     emailInput.value = user.email || "";
-    // update header / avatar text if present
     if (nameHeader) nameHeader.textContent = user.display_name || user.username || "User";
     if (emailSmall) emailSmall.textContent = user.email || "";
-    // avatar left as default (lab: can't change)
   } catch (err) {
     showAlert("Lỗi kết nối khi tải profile: " + err.message, "danger", 4000);
   }
 }
 
-// validate basic client-side
 function validateForm() {
-  // reset previous invalid classes
   [displayNameInput, emailInput].forEach(i => i.classList.remove("is-invalid"));
 
   if (!displayNameInput.value.trim()) {
@@ -138,7 +129,6 @@ function validateForm() {
     showFieldError(emailInput, "Email không được để trống");
     return false;
   }
-  // basic email regex
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!re.test(email)) {
     showFieldError(emailInput, "Email không hợp lệ");
@@ -147,19 +137,16 @@ function validateForm() {
   return true;
 }
 
-// submit update
 async function submitProfile(e) {
   e.preventDefault();
-  // form validation via bootstrap html5 + our checks
   if (!validateForm()) return;
 
   const payload = {
     displayName: displayNameInput.value.trim(),
     email: emailInput.value.trim(),
-    password: passwordInput.value // may be empty
+    password: passwordInput.value
   };
 
-  // disable UI
   submitBtn.disabled = true;
   const oldText = submitBtn.textContent;
   submitBtn.textContent = "Đang gửi...";
@@ -182,13 +169,10 @@ async function submitProfile(e) {
 
     if (res.ok && body.ok) {
       showAlert(body.message || "Cập nhật thành công", "success", 2000);
-      // update header text if needed
       if (nameHeader) nameHeader.textContent = payload.displayName;
       if (emailSmall) emailSmall.textContent = payload.email;
-      // clear password field
       passwordInput.value = "";
     } else {
-      // error from server
       const msg = (body && (body.error || body.message)) || `Lỗi: ${res.status}`;
       showAlert(msg, "danger", 4000);
     }
@@ -200,10 +184,8 @@ async function submitProfile(e) {
   }
 }
 
-// bind events
 profileForm.addEventListener("submit", submitProfile);
 
-// run initial load
 loadProfile();
 </script>
 

@@ -26,7 +26,6 @@
         </div>
       </div>
 
-      <!-- Phần bình luận demo -->
       <div class="card border-0 shadow-sm mt-3">
         <div class="card-body">
           <h6>Bình luận</h6>
@@ -40,7 +39,6 @@
     </div>
 
 <script>
-  // Lấy postId từ ?id=... hoặc /posts/view/:id
   function getPostIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     if (params.has("id")) return params.get("id");
@@ -48,7 +46,6 @@
     return parts.pop() || null;
   }
 
-  // Hiển thị alert nhỏ trong card
   function setPostDetailHtml(html) {
     document.getElementById("postDetail").innerHTML = html;
   }
@@ -77,7 +74,6 @@
       }
 
       const post = data.post;
-      // intentionally render raw HTML (vulnerable for stored XSS lab)
       setPostDetailHtml(`
         <div class="card-body">
           <h5>Bài viết #${post.id}</h5>
@@ -88,14 +84,12 @@
         </div>
       `);
 
-      // load comments after post
       await loadComments(id);
     } catch (err) {
       setPostDetailHtml(`<div class="card-body"><div class="alert alert-danger">Lỗi: ${err.message}</div></div>`);
     }
   }
 
-  // Load comments list from API
   async function loadComments(postId) {
     commentsList.innerHTML = '<li class="list-group-item text-muted">Đang tải bình luận...</li>';
     try {
@@ -112,7 +106,6 @@
       }
       commentsList.innerHTML = "";
       arr.forEach(c => {
-        // intentionally vulnerable: render raw HTML (stored XSS)
         const li = document.createElement("li");
         li.className = "list-group-item";
         li.innerHTML = `<strong>${c.username || 'Người dùng'}</strong>: ${c.content}`;
@@ -123,7 +116,6 @@
     }
   }
 
-  // Submit new comment to API
   async function submitComment(e) {
     e.preventDefault();
     const postId = getPostIdFromUrl();
@@ -132,7 +124,6 @@
     const content = commentForm.comment.value.trim();
     if (!content) return;
 
-    // optimistic UI: disable button
     const submitBtn = commentForm.querySelector("button[type='submit']");
     submitBtn.disabled = true;
     submitBtn.textContent = "Đang gửi...";
@@ -148,7 +139,7 @@
       const j = await res.json();
       if (res.ok && j.ok) {
         commentForm.reset();
-        await loadComments(postId); // reload to show stored comment (and XSS may execute)
+        await loadComments(postId);
       } else {
         alert(j.error || "Lỗi khi thêm bình luận");
       }
@@ -160,14 +151,11 @@
     }
   }
 
-  // DOM refs
   const commentForm = document.getElementById("commentForm");
   const commentsList = document.getElementById("commentsList");
 
-  // bind submit
   commentForm.addEventListener("submit", submitComment);
 
-  // initial load
   loadPostDetail();
 </script>
 
