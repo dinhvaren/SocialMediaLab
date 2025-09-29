@@ -11,16 +11,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/image", express.static(path.join(__dirname, "..", "image")));
 app.use(express.static(path.join(__dirname, "..", "views")));
-// rất quan trọng khi deploy
-app.set("trust proxy", 1);
+
+const isProduction = process.env.NODE_ENV === "production";
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "secret-dev",
+    secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // chỉ bật khi chạy HTTPS
-      sameSite: "lax",
+      secure: isProduction,
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -29,6 +31,8 @@ const port = process.env.PORT;
 const host = process.env.HOST;
 
 db.connect();
+// rất quan trọng khi deploy
+app.set("trust proxy", 1);
 
 route(app);
 
