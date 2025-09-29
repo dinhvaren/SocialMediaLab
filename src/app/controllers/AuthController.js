@@ -7,10 +7,12 @@ class AuthController {
   }
 
   // Xử lý login
+  // Xử lý login
   async login(req, res, next) {
     try {
       const { username, password } = req.body;
 
+      // ⚠️ Hiện tại code này vẫn có SQLi, để làm lab thì tạm giữ nguyên
       const sql = `SELECT id, username FROM users WHERE username = "${username}" AND pass = "${password}"`;
 
       console.log("DEBUG SQL:", sql);
@@ -18,7 +20,10 @@ class AuthController {
       const [rows] = await pool.query(sql);
 
       if (rows.length === 0) {
-        return res.status(401).send("Sai username hoặc mật khẩu");
+        // ❌ login fail
+        return res
+          .status(401)
+          .json({ ok: false, error: "Sai username hoặc mật khẩu" });
       }
 
       req.session.userId = rows[0].id;
@@ -30,10 +35,11 @@ class AuthController {
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000,
       });
-      res.redirect("/dashboard");
+
+      res.json({ ok: true, message: "Đăng nhập thành công" });
     } catch (err) {
       console.error("SQL Error:", err);
-      res.status(500).send("Lỗi DB: " + err.message);
+      res.status(500).json({ ok: false, error: "Lỗi DB: " + err.message });
     }
   }
 

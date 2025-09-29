@@ -117,13 +117,19 @@
         body: JSON.stringify({ content, visibility })
       });
       const data = await res.json();
-      if (data.ok) {
-        showPostAlert('Đăng bài thành công');
-        postForm.reset();
-        postForm.classList.remove('was-validated');
-        loadPosts(); // reload lại danh sách
+      if (res.ok) {
+        const j = await res.json();
+        if (j.ok) {
+          showAlert(j.message || 'Đăng nhập thành công', 'success');
+          // ✅ chuyển sang dashboard sau 0.5s
+          setTimeout(() => window.location.href = '/dashboard', 500);
+        } else {
+          showAlert(j.error || 'Đăng nhập thất bại', 'danger');
+        }
       } else {
-        showPostAlert(data.error || 'Lỗi đăng bài', 'danger');
+        // xử lý lỗi server
+        const txt = await res.text();
+        showAlert(txt, 'danger');
       }
     } catch (err) {
       showPostAlert('Lỗi kết nối: ' + err.message, 'danger');
