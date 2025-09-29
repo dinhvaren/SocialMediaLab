@@ -1,7 +1,3 @@
-// src/app/controllers/ProfileController.js
-// Controller quản lý profile: view page, get profile data (API), update profile
-// Comments tiếng Việt sát cạnh code để bạn dễ hiểu
-
 const { pool } = require("../../database/db");
 
 class ProfileController {
