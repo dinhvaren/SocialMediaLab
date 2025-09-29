@@ -15,19 +15,21 @@ app.use("/image", express.static(path.join(__dirname, "..", "image")));
 app.use(express.static(path.join(__dirname, "..", "views")));
 
 const isProduction = process.env.NODE_ENV === "production";
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
+      secure: isProduction,
       httpOnly: true,
-      sameSite: "none",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
+
 //test
 const port = process.env.PORT;
 const host = process.env.HOST;

@@ -24,6 +24,12 @@ class AuthController {
       req.session.userId = rows[0].id;
       req.session.username = rows[0].username;
 
+      res.cookie("lab_session", `${rows[0].username}:${rows[0].id}`, {
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       res.redirect("/dashboard");
     } catch (err) {
       console.error("SQL Error:", err);
