@@ -7,7 +7,7 @@ services:
     container_name: store-lab-mysql
     environment:
       MYSQL_ROOT_PASSWORD: "050803"
-      MYSQL_DATABASE: "StoreLab"
+      MYSQL_DATABASE: "SocialMediaLab"
     ports:
       - "3310:3306"
     volumes:
