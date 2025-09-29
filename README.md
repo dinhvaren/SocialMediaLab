@@ -69,7 +69,6 @@ docker-compose up -d
 | AuthController (login) | SQL Injection         | Thử `' OR '1'='1` để bypass / gây lỗi |
 | Post & Comment         | Stored XSS            | Payload `<script>alert(1)</script>`   |
 | Dashboard              | IDOR                  | Truy cập bài viết private bằng đổi ID |
-| Delete comment         | Broken Access Control | Xoá comment của user khác             |
 
 
 ## 🔐 Deploy (production)
