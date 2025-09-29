@@ -1,12 +1,7 @@
-// src/app/controllers/PostController.js
-// Controller quản lý bài viết (Posts)
-// Trong lab này mình cố tình viết query vulnerable (string concatenation) để tạo điều kiện SQLi.
-// ⚠️ Lưu ý: KHÔNG dùng code này trên production.
-
 const { pool } = require("../../database/db");
 
 class PostController {
-
+    
   // Hiển thị danh sách post (public + private nếu là chủ sở hữu)
   async list(req, res, next) {
     try {
@@ -50,12 +45,7 @@ class PostController {
       const postId = req.params.id;
       const userId = req.session.userId;
 
-      const sql = `
-        SELECT p.*, u.username
-        FROM posts p
-        JOIN users u ON p.author_id = u.id
-        WHERE p.id = ${postId}
-      `;
+      const sql = `SELECT p.*, u.username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = ${postId}`;
       const [rows] = await pool.query(sql);
       if (rows.length === 0)
         return res.status(404).json({ error: "Post not found" });
