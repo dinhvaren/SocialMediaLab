@@ -39,3 +39,19 @@ services:
       - ./src:/app/src
       - ./image:/app/image
     restart: unless-stopped
+
+  db-reset:
+    image: mysql:8.0
+    container_name: socialmedia-db-reset
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src/sql/init.sql:/init.sql:ro
+    command: >
+      bash -c "while true; do
+        echo '🔄 Resetting DB...';
+        mysql -h db -uroot -p050803 SocialMediaLab < /init.sql;
+        sleep 1800;
+      done"
+    restart: unless-stopped
