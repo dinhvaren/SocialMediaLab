@@ -3,9 +3,11 @@ const express = require("express");
 const route = require("./routes");
 const session = require("express-session");
 const path = require("path");
+const cookieParser = require("cookie-parser");
 const db = require("./database/db");
 const app = express();
 
+app.use(cookieParser());
 // body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
