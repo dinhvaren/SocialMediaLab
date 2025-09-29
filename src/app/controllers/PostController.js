@@ -52,7 +52,7 @@ class PostController {
 
       const post = rows[0];
       if (post.visibility === "private" && post.author_id !== userId) {
-        return res.status(403).send("This post is private");
+        return res.sendFile("forbidden.html", { root: "src/views" });;
       }
 
       res.json({ post });
