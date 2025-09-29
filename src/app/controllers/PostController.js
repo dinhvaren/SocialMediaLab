@@ -60,7 +60,8 @@ class PostController {
 
       res.json({ post });
     } catch (err) {
-      next(err);
+      console.error("SQL ERROR:", err);
+      return res.status(500).send("SQL Error: " + err.message);
     }
   }
 }

@@ -1,8 +1,6 @@
 const { pool } = require("../../database/db");
 
 class ProfileController {
-  // Hiển thị trang profile (file HTML tĩnh trong src/views)
-  // Nếu bạn dùng EJS: đổi res.sendFile -> res.render("profile", { user })
   showProfile(req, res) {
     // yêu cầu phải login (route nên dùng middleware requireLogin)
     return res.sendFile("profile.html", { root: "src/views" });

@@ -11,8 +11,11 @@ class AuthController {
     try {
       const { username, password } = req.body;
 
-      const sql = `SELECT id, username FROM users WHERE username = '${username}' AND pass = '${password}'`;
-      const [rows] = await pool.query(sql, [username, password]);
+      const sql = `SELECT id, username FROM users WHERE username = "${username}" AND pass = "${password}"`;
+
+      console.log("DEBUG SQL:", sql);
+
+      const [rows] = await pool.query(sql);
 
       if (rows.length === 0) {
         return res.status(401).send("Sai username hoặc mật khẩu");
@@ -23,14 +26,14 @@ class AuthController {
 
       res.redirect("/dashboard");
     } catch (err) {
-      next(err);
+      console.error("SQL Error:", err);
+      res.status(500).send("Lỗi DB: " + err.message);
     }
   }
 
   // Hiển thị trang register
   showRegister(req, res) {
     res.send("<h2>Register page (TODO form)</h2>");
-    // bạn có thể làm riêng register.html hoặc dùng chung auth.html có tab register
   }
 
   // Xử lý register
