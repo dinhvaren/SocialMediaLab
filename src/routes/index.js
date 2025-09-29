@@ -5,6 +5,7 @@ const dashboardRouter = require("./dashboard");
 
 function route(app) {
   app.get("/", (req, res) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.redirect("/auth/login");
   });
   app.use("/auth", authRouter);

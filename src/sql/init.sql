@@ -1,6 +1,14 @@
 -- sql/init.sql
 -- Lab DB schema for MiniSocial CTF lab
-CREATE DATABASE IF NOT EXISTS SocialMediaLab;
+-- NOTE: file must be saved as UTF-8 before importing
+
+-- ensure client uses utf8mb4 during import
+SET NAMES utf8mb4;
+SET SESSION collation_connection = 'utf8mb4_unicode_ci';
+
+CREATE DATABASE IF NOT EXISTS SocialMediaLab
+  CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
 USE SocialMediaLab;
 
 -- Roles
