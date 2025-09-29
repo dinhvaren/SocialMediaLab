@@ -22,9 +22,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
-      httpOnly: true,
-      sameSite:"none",
+      secure: false,
+      httpOnly: false,
+      sameSite:"lax",
       maxAge: 24 * 60 * 60 * 1000,
     },
   })
