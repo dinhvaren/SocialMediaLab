@@ -88,15 +88,6 @@ docker-compose up -d
 * [ ] Payload XSS / SQLi hoạt động để khai thác
 
 
-## 📚 Mở rộng
-
-* CSRF token
-* Template engine (EJS, Pug)
-* Upload ảnh avatar, post image
-* Role-based access control (Admin/User)
-* JWT + Refresh Token
-
-
 ## 👤 Tác giả
 
 * **Tên**: Lương Nguyễn Ngọc Đình
