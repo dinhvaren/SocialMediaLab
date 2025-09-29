@@ -88,7 +88,6 @@ docker-compose up -d
 * [ ] Login / Post / Comment test ok
 * [ ] Payload XSS / SQLi hoạt động để khai thác
 
----
 
 ## 📚 Mở rộng
 
