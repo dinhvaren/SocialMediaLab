@@ -15,38 +15,159 @@
     </div>
   </nav>
 
-  <div class="container py-5">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="small text-muted mb-2">Bởi <strong>Alice</strong> • public • 5 phút trước</div>
-        <p class="fs-5">Xin chào! Đây là bài post chi tiết của Alice.</p>
-        <hr>
-        <h6>Bình luận</h6>
-        <ul class="list-group mb-3">
-          <li class="list-group-item">Bob: Hay quá Alice!</li>
-          <li class="list-group-item">Charlie: Cũng muốn thử post như bạn.</li>
-        </ul>
-        <form id="commentForm" class="d-flex">
-          <input class="form-control me-2" name="comment" placeholder="Viết bình luận..." required />
-          <button class="btn btn-primary">Gửi</button>
-        </form>
+    <div class="container py-5">
+      <div id="postDetail" class="card border-0 shadow-sm">
+        <div class="card-body">
+          <p class="text-muted">Đang tải chi tiết bài viết...</p>
+        </div>
+      </div>
+
+      <!-- Phần bình luận demo -->
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body">
+          <h6>Bình luận</h6>
+          <ul id="commentsList" class="list-group mb-3"></ul>
+          <form id="commentForm" class="d-flex">
+            <input class="form-control me-2" name="comment" placeholder="Viết bình luận..." required />
+            <button class="btn btn-primary">Gửi</button>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script>
-    const form = document.getElementById('commentForm');
-    const list = document.querySelector('.list-group');
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const cmt = form.comment.value.trim();
-      if (!cmt) return;
-      const li = document.createElement('li');
-      li.className = 'list-group-item';
-      li.textContent = 'Bạn: ' + cmt;
-      list.appendChild(li);
-      form.reset();
-    });
-  </script>
+<script>
+  // Lấy postId từ ?id=... hoặc /posts/view/:id
+  function getPostIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("id")) return params.get("id");
+    const parts = location.pathname.split("/");
+    return parts.pop() || null;
+  }
+
+  // Hiển thị alert nhỏ trong card
+  function setPostDetailHtml(html) {
+    document.getElementById("postDetail").innerHTML = html;
+  }
+
+  async function loadPostDetail() {
+    const id = getPostIdFromUrl();
+    if (!id) {
+      setPostDetailHtml('<div class="card-body"><div class="alert alert-warning">Post ID không hợp lệ</div></div>');
+      return;
+    }
+
+    setPostDetailHtml('<div class="card-body"><p class="text-muted">Đang tải chi tiết bài viết...</p></div>');
+
+    try {
+      const res = await fetch("/posts/" + id, { credentials: "same-origin" });
+      if (!res.ok) {
+        const txt = await res.text();
+        setPostDetailHtml(`<div class="card-body"><div class="alert alert-danger">Lỗi tải: ${txt}</div></div>`);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.error) {
+        setPostDetailHtml(`<div class="card-body"><div class="alert alert-warning">${data.error}</div></div>`);
+        return;
+      }
+
+      const post = data.post;
+      // intentionally render raw HTML (vulnerable for stored XSS lab)
+      setPostDetailHtml(`
+        <div class="card-body">
+          <h5>Bài viết #${post.id}</h5>
+          <div class="small text-muted mb-1">
+            Bởi <strong>${post.username}</strong> • ${post.visibility}
+          </div>
+          <p class="fs-5">${post.content}</p>
+        </div>
+      `);
+
+      // load comments after post
+      await loadComments(id);
+    } catch (err) {
+      setPostDetailHtml(`<div class="card-body"><div class="alert alert-danger">Lỗi: ${err.message}</div></div>`);
+    }
+  }
+
+  // Load comments list from API
+  async function loadComments(postId) {
+    commentsList.innerHTML = '<li class="list-group-item text-muted">Đang tải bình luận...</li>';
+    try {
+      const res = await fetch(`/posts/${postId}/comments`, { credentials: "same-origin" });
+      if (!res.ok) {
+        commentsList.innerHTML = '<li class="list-group-item text-danger">Không load được bình luận</li>';
+        return;
+      }
+      const j = await res.json();
+      const arr = j.comments || [];
+      if (arr.length === 0) {
+        commentsList.innerHTML = '<li class="list-group-item text-muted">Chưa có bình luận</li>';
+        return;
+      }
+      commentsList.innerHTML = "";
+      arr.forEach(c => {
+        // intentionally vulnerable: render raw HTML (stored XSS)
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        li.innerHTML = `<strong>${c.username || 'Người dùng'}</strong>: ${c.content}`;
+        commentsList.appendChild(li);
+      });
+    } catch (err) {
+      commentsList.innerHTML = `<li class="list-group-item text-danger">Lỗi: ${err.message}</li>`;
+    }
+  }
+
+  // Submit new comment to API
+  async function submitComment(e) {
+    e.preventDefault();
+    const postId = getPostIdFromUrl();
+    if (!postId) return alert("Post ID không xác định");
+
+    const content = commentForm.comment.value.trim();
+    if (!content) return;
+
+    // optimistic UI: disable button
+    const submitBtn = commentForm.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Đang gửi...";
+
+    try {
+      const res = await fetch(`/posts/${postId}/comments`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content })
+      });
+
+      const j = await res.json();
+      if (res.ok && j.ok) {
+        commentForm.reset();
+        await loadComments(postId); // reload to show stored comment (and XSS may execute)
+      } else {
+        alert(j.error || "Lỗi khi thêm bình luận");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối: " + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Gửi";
+    }
+  }
+
+  // DOM refs
+  const commentForm = document.getElementById("commentForm");
+  const commentsList = document.getElementById("commentsList");
+
+  // bind submit
+  commentForm.addEventListener("submit", submitComment);
+
+  // initial load
+  loadPostDetail();
+</script>
+
+
+
 </body>
 </html>

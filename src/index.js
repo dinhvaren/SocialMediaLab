@@ -10,14 +10,14 @@ const app = express();
 // body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
+app.use(express.static(path.join(__dirname, "..", "..", "views")));
 // session (dùng SESSION_SECRET từ .env)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secret-dev",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: true },
+    cookie: { secure: process.env.NODE_ENV === "production" }, // or simply false during dev
   })
 );
 

@@ -74,12 +74,6 @@
                 </form>
               </div>
             </div>
-
-            <!-- Alert demo (giả lập) -->
-            <div id="authAlert" class="alert mt-3 d-none" role="alert"></div>
-            <p class="text-center text-muted mt-3 mb-0" style="font-size:.9rem">
-              Demo users: <code>alice/alicepass</code> • <code>bob/bobpass</code>
-            </p>
           </div>
         </div>
       </div>
@@ -89,48 +83,165 @@
   <!-- Bootstrap Bundle + demo JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // ===== Validate HTML5 nhanh (client-side) =====
-    (function () {
-      'use strict';
-      const forms = document.querySelectorAll('.needs-validation');
-      Array.from(forms).forEach(form => {
-        form.addEventListener('submit', function (e) {
-          if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          form.classList.add('was-validated');
-        }, false);
-      });
-    })();
+  // ===== Helper để show alert =====
+  const authAlert = document.getElementById('authAlert');
+  function showAlert(message, type = 'success') {
+    authAlert.className = `alert alert-${type} mt-3`;
+    authAlert.textContent = message;
+    authAlert.style.display = 'block';
+  }
+  function hideAlert() {
+    authAlert.className = 'alert mt-3 d-none';
+    authAlert.textContent = '';
+  }
 
-    // ===== Demo submit (chưa nối API): chỉ hiện alert rồi chuyển trang =====
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const authAlert = document.getElementById('authAlert');
-
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      // TODO: fetch('/auth/login', {method:'POST', body:FormData})
-      authAlert.className = 'alert alert-success mt-3';
-      authAlert.textContent = 'Đăng nhập thành công (demo). Chuyển tới Dashboard...';
-      setTimeout(() => window.location.href = 'dashboard.html', 800);
+  // ===== Validation HTML5 (giữ nguyên) =====
+  (function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', function (e) {
+        if (!form.checkValidity()) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
     });
+  })();
 
-    registerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const pwd = registerForm.password.value;
-      const cfm = registerForm.confirm.value;
-      if (pwd !== cfm) {
-        authAlert.className = 'alert alert-danger mt-3';
-        authAlert.textContent = 'Mật khẩu nhập lại không khớp.';
+  // ===== Fetch for Login =====
+  const loginForm = document.getElementById('loginForm');
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    if (!loginForm.checkValidity()) {
+      loginForm.classList.add('was-validated');
+      return;
+    }
+
+    const formData = new FormData(loginForm);
+    // Nếu server chấp nhận application/x-www-form-urlencoded:
+    const body = new URLSearchParams(formData);
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        body, // x-www-form-urlencoded
+        credentials: 'same-origin', // gửi cookie session
+        headers: {
+          // Không đặt Content-Type khi dùng URLSearchParams; browser tự set
+          'Accept': 'text/html, application/json'
+        }
+      });
+
+      // Nếu server redirect (res.redirect(...)) -> fetch sets redirected true
+      if (res.redirected) {
+        // điều hướng tới URL đích (thường /dashboard)
+        window.location.href = res.url;
         return;
       }
-      // TODO: fetch('/auth/register', {...})
-      authAlert.className = 'alert alert-success mt-3';
-      authAlert.textContent = 'Tạo tài khoản thành công (demo). Chuyển tới Dashboard...';
-      setTimeout(() => window.location.href = 'dashboard.html', 800);
-    });
-  </script>
+
+      // Nếu server trả JSON (ví dụ { ok: true }) hoặc text
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok) {
+        if (contentType.includes('application/json')) {
+          const j = await res.json();
+          if (j && j.ok) {
+            showAlert(j.message || 'Đăng nhập thành công', 'success');
+            setTimeout(() => window.location.href = '/dashboard', 600);
+          } else {
+            showAlert(j.error || 'Đăng nhập thành công', 'success');
+            setTimeout(() => window.location.href = '/dashboard', 600);
+          }
+        } else {
+          // text/html response (login page reload) -> chuyển hướng thử parse location
+          const text = await res.text();
+          // fallback: nếu server không redirect nhưng trả HTML (login page), show success and go
+          showAlert('Đăng nhập thành công (response text)', 'success');
+          setTimeout(() => window.location.href = '/dashboard', 600);
+        }
+      } else {
+        // lỗi status (401/400)
+        let msg = `Lỗi: ${res.status}`;
+        try {
+          if (contentType.includes('application/json')) {
+            const j = await res.json();
+            msg = j.error || j.message || msg;
+          } else {
+            const txt = await res.text();
+            msg = txt || msg;
+          }
+        } catch (_) {}
+        showAlert(msg, 'danger');
+      }
+    } catch (err) {
+      showAlert('Lỗi kết nối: ' + err.message, 'danger');
+    }
+  });
+
+  // ===== Fetch for Register =====
+  const registerForm = document.getElementById('registerForm');
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    if (!registerForm.checkValidity()) {
+      registerForm.classList.add('was-validated');
+      return;
+    }
+
+    const pwd = registerForm.password.value;
+    const cfm = registerForm.confirm.value;
+    if (pwd !== cfm) {
+      showAlert('Mật khẩu nhập lại không khớp.', 'danger');
+      return;
+    }
+
+    const formData = new FormData(registerForm);
+    const body = new URLSearchParams(formData);
+
+    try {
+      const res = await fetch('/auth/register', {
+        method: 'POST',
+        body,
+        credentials: 'same-origin',
+        headers: { 'Accept': 'text/html, application/json' }
+      });
+
+      if (res.redirected) {
+        window.location.href = res.url;
+        return;
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok) {
+        if (contentType.includes('application/json')) {
+          const j = await res.json();
+          showAlert(j.message || 'Đăng ký thành công', 'success');
+        } else {
+          showAlert('Đăng ký thành công', 'success');
+        }
+        setTimeout(() => window.location.href = '/auth/login', 700);
+      } else {
+        let msg = `Lỗi: ${res.status}`;
+        try {
+          if (contentType.includes('application/json')) {
+            const j = await res.json();
+            msg = j.error || j.message || msg;
+          } else {
+            const txt = await res.text();
+            msg = txt || msg;
+          }
+        } catch (_) {}
+        showAlert(msg, 'danger');
+      }
+    } catch (err) {
+      showAlert('Lỗi kết nối: ' + err.message, 'danger');
+    }
+  });
+</script>
+
 </body>
 </html>

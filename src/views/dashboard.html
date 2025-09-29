@@ -69,35 +69,75 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    const postForm = document.getElementById('postForm');
-    const feed = document.getElementById('feed');
-    const postAlert = document.getElementById('postAlert');
+ <script>
+  const postForm = document.getElementById('postForm');
+  const feed = document.getElementById('feed');
+  const postAlert = document.getElementById('postAlert');
 
-    postForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!postForm.checkValidity()) return;
+  // ====== Load danh sách bài viết ======
+  async function loadPosts() {
+    try {
+      const res = await fetch('/posts'); // GET /posts
+      const data = await res.json();
+      feed.innerHTML = ''; // clear feed
+      data.posts.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card border-0 shadow-sm mb-2';
+        card.innerHTML = `
+          <div class="card-body">
+            <div class="small text-muted mb-1">Bởi <strong>${p.username}</strong> • ${p.visibility}</div>
+            <p>${p.content}</p>
+            <a href="/posts/view/${p.id}" class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+    } catch (err) {
+      console.error('Lỗi load posts:', err);
+    }
+  }
 
-      const content = postForm.content.value.trim();
-      const visibility = postForm.visibility.value;
-      if (!content) return;
+  // ====== Tạo bài viết mới ======
+  postForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!postForm.checkValidity()) {
+      postForm.classList.add('was-validated');
+      return;
+    }
 
-      const card = document.createElement('div');
-      card.className = 'card border-0 shadow-sm';
-      card.innerHTML = `
-        <div class="card-body">
-          <div class="small text-muted mb-1">Bởi <strong>Bạn</strong> • ${visibility} • vừa đăng</div>
-          <p>${content}</p>
-          <a href="post_detail.html?id=new" class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
-        </div>
-      `;
-      feed.prepend(card);
+    const content = postForm.content.value.trim();
+    const visibility = postForm.visibility.value;
 
-      postForm.reset();
-      postForm.classList.remove('was-validated');
-      postAlert.classList.remove('d-none');
-      setTimeout(() => postAlert.classList.add('d-none'), 1200);
-    });
-  </script>
+    try {
+      const res = await fetch('/posts/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, visibility })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showPostAlert('Đăng bài thành công');
+        postForm.reset();
+        postForm.classList.remove('was-validated');
+        loadPosts(); // reload lại danh sách
+      } else {
+        showPostAlert(data.error || 'Lỗi đăng bài', 'danger');
+      }
+    } catch (err) {
+      showPostAlert('Lỗi kết nối: ' + err.message, 'danger');
+    }
+  });
+
+  function showPostAlert(msg, type = 'success') {
+    postAlert.className = `alert alert-${type} mt-3`;
+    postAlert.textContent = msg;
+    postAlert.classList.remove('d-none');
+    setTimeout(() => postAlert.classList.add('d-none'), 1500);
+  }
+
+  // ====== Lần đầu load danh sách ======
+  loadPosts();
+</script>
+
 </body>
 </html>
