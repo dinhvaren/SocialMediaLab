@@ -13,8 +13,8 @@ RUN npm install --production
 # Copy toàn bộ source code
 COPY . .
 
-# Expose port 3000 cho app
-EXPOSE 3000
+# Expose port 3001 cho app
+EXPOSE 3001
 
 # Start app
 CMD ["node", "src/index.js"]
