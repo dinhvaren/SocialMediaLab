@@ -2,7 +2,7 @@
 set -e
 
 APP_NAME="socialmedialab"
-DOMAIN="vhu-minisocial.io.vn"
+DOMAIN="minisocial.vhuinfosec.io.vn"
 
 echo "🔁 Pulling latest code..."
 git pull origin main || true
