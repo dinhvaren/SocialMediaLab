@@ -31,7 +31,7 @@ app.use(
 );
 
 //test
-const port = process.env.PORT;
+const port = process.env.PORT || 3003;
 const host = process.env.HOST;
 
 db.connect();

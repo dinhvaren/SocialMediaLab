@@ -2,7 +2,8 @@
 set -e
 
 APP_NAME="socialmedialab"
-DOMAIN="minisocial.vhuinfosec.io.vn"
+APP_PORT=3003
+DOMAIN="socialmedia.vhuinfosec.io.vn"
 
 echo "🔁 Pulling latest code..."
 git pull origin main || true
@@ -22,7 +23,7 @@ server {
     server_name $DOMAIN www.$DOMAIN;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://127.0.0.1:$APP_PORT;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \\\$http_upgrade;
         proxy_set_header Connection 'upgrade';
